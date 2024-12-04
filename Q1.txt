@@ -1,0 +1,187 @@
+.data
+prompt_int:  .asciiz "Enter an integer : "
+int_result:  .asciiz "Integer result : "
+prompt_float: .asciiz "Enter a float : "
+flt_result:  .asciiz "Float result : "
+newline:     .asciiz "\n"
+
+three: .float 3.0
+five: .float 5.0
+
+.text
+
+main:
+    jal prompt_read_integer
+    move $s0, $v0  
+    
+    jal prompt_read_integer
+    move $s1, $v0  
+    
+    jal cal_int
+
+    jal integer_result
+    
+    jal new_line
+    
+    jal prompt_read_float
+    mov.s $f1, $f0  
+    
+    jal prompt_read_float
+    mov.s $f2, $f0  
+    
+    jal cal_float
+
+    jal float_result
+
+    li $v0, 10
+    syscall
+
+prompt_read_integer:
+    li $v0, 4     
+    la $a0, prompt_int
+    syscall
+
+    li $v0, 5         
+    syscall
+    jr $ra   
+    
+cal_int:
+	li $t0, 3
+	mul $t0, $t0, $s0          
+	
+	li $t1, 5
+	mul $t1, $t1, $s1
+	
+	sub $t0, $t0, $t1
+	jr $ra                                                  
+
+integer_result:
+    li $v0, 4
+    la $a0, int_result
+    syscall
+
+    li $v0, 1  
+	move $a0, $t0
+	syscall   
+	jr $ra 
+
+prompt_read_float:
+    li $v0, 4          
+    la $a0, prompt_float
+    syscall
+
+    li $v0, 6          
+    syscall
+    jr $ra  
+    
+cal_float:
+    l.s $f3, three
+    mul.s $f3, $f3, $f1       
+
+    l.s $f4, five
+    mul.s $f4, $f4, $f2       
+
+    sub.s $f2, $f3, $f4         
+    jr $ra                                         
+
+float_result:
+    li $v0, 4
+    la $a0, flt_result
+    syscall
+
+    li $v0, 2
+	mov.s $f12, $f2
+	syscall
+	jr $ra       
+	
+new_line:
+    li $v0, 4
+    la $a0, newline
+    syscall	        
+    jr $ra        
+
+######################################
+
+.data
+prompt_cmd: .asciiz "\nEnter a command: "
+prompt_val: .asciiz "\nEnter a value: "
+menu:       .asciiz "\nAdding Machine\nInitial Value = 0\nCommands:\n0 - Add\n1 - Subtract\n2 - Multiply\n3 - Divide\n4 - Clear\n5 - Exit\n"
+curr_val:   .asciiz "\nThe current value: "
+newline:    .asciiz "\n"
+
+.text
+
+main:
+    li $v0, 4
+    la $a0, menu
+    syscall
+
+    li $t0, 0
+    j loop
+
+loop:
+    li $v0, 4
+    la $a0, prompt_cmd
+    syscall
+
+    li $v0, 5
+    syscall
+    move $t1, $v0
+
+    beq $t1, 5, exit
+    beq $t1, 4, clear
+
+    li $v0, 4
+    la $a0, prompt_val
+    syscall
+
+    li $v0, 5
+    syscall
+    move $t2, $v0
+
+    beq $t1, 0, add
+    beq $t1, 1, subtract
+    beq $t1, 2, multiply
+    beq $t1, 3, divide
+    j loop
+
+add:
+    add $t0, $t0, $t2
+    j print
+
+subtract:
+    sub $t0, $t0, $t2
+    j print
+
+multiply:
+    mul $t0, $t0, $t2
+    j print
+
+divide:
+    beq $t2, 0, loop
+    div $t0, $t0, $t2
+    mflo $t0
+    j print
+
+clear:
+    li $t0, 0
+    j print
+
+print:
+    li $v0, 4
+    la $a0, curr_val
+    syscall
+
+    li $v0, 1
+    move $a0, $t0
+    syscall
+
+    li $v0, 4
+    la $a0, newline
+    syscall
+
+    j loop
+
+exit:
+    li $v0, 10
+    syscall
